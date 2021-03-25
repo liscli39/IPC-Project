@@ -49,4 +49,14 @@ void getUserLogin(struct UserLogin*login);
 // ---------------------------------------------------------
 void getDemographic(struct Demographic* demographic);
 
+// ---------------------------------------------------------
+// UserLogin Data: get username
+// ---------------------------------------------------------
+void getUsername(char* username);
+
+// ---------------------------------------------------------
+// UserLogin Data: get password
+// ---------------------------------------------------------
+void getPassword(char* password);
+
 #endif

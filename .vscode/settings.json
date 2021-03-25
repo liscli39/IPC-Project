@@ -1,0 +1,11 @@
+{
+  "files.associations": {
+    "w6p1.h": "c",
+    "stdio.h": "c",
+    "account.h": "c",
+    "commonhelpers.h": "c",
+    "typeinfo": "c",
+    "accountticketingui.h": "c",
+    "stdlib.h": "c"
+  }
+}
