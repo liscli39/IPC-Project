@@ -10,6 +10,16 @@
 #ifndef ACCOUNT_TICKETING_UI_H_
 #define ACCOUNT_TICKETING_UI_H_
 
+#include "account.h"
+#include "ticket.h"
+
+struct AccountTicketingData {
+  struct Account* accounts;
+  const int ACCOUNT_MAX_SIZE; 
+  struct Ticket* tickets;
+  const int TICKET_MAX_SIZE;
+};
+
 // ----------------------------------------------------------------------------
 // function prototypes
 
@@ -36,7 +46,7 @@ void displayAccountDetailRecord(const struct Account* account);
 // ---------------------------------------------------------
 // Application Startup: the entry point to the application logic
 // ---------------------------------------------------------
-void applicationStartup(struct Account accounts[], int arrSize);
+void applicationStartup(struct AccountTicketingData* data);
 
 // ---------------------------------------------------------
 // Menu Login: will return the index number of the account array for the user that is logged in
@@ -46,7 +56,7 @@ int menuLogin(const struct Account accounts[], int arrSize);
 // ---------------------------------------------------------
 // Menu Agent: This is the main menu for an agent who has authorization to manage the accounts for the system.
 // ---------------------------------------------------------
-void menuAgent(struct Account accounts[], int arrSize, const struct Account* account);
+void menuAgent(struct AccountTicketingData* data, const struct Account* account);
 
 // ---------------------------------------------------------
 // Find account index by account number
@@ -82,5 +92,15 @@ void updateUserLogin(struct UserLogin*login);
 // Demographic Data: update from user input
 // ---------------------------------------------------------
 void updateDemographic(struct Demographic* demographic);
+
+// ---------------------------------------------------------
+// Menu Custormer: This is the main menu for a customer login.
+// ---------------------------------------------------------
+void menuCustomer(const struct Account* account);
+
+// ---------------------------------------------------------
+// Auto generate account number
+// ---------------------------------------------------------
+int autoGenAcctNum(const struct Account accounts[], int arrSize);
 
 #endif

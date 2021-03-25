@@ -135,47 +135,39 @@ char getCharOption(char* string) {
 void getCString(char *string, int min, int max)
 {
   int id, flag;
-  do
-  {
+  do {
     char input = '\n';
     flag = 0;
 
-    for (id = 0; id <= max && input != '\0'; id++)
-    {
+    for (id = 0; id <= max && input != '\0'; id++) {
       input = getchar();
 
-      if (input == '\n')
-      {
+      if (input == '\n') {
         input = '\0';
       }
 
       string[id] = input;
     }
 
-    if (id - 1 < min)
-    {
-      if (min == max)
-      {
+    if (id - 1 < min) {
+      if (min == max) {
         printf("ERROR: String length must be exactly %d chars: ", min);
       }
-      else
-      {
+      else {
         printf("ERROR: String length must be between %d and %d chars:", min, max);
       }
 
       flag = 1;
     }
 
-    if (id - 1 == max && string[max] != '\0')
-    {
-      if (min == max)
-      {
+    if (id - 1 == max && string[max] != '\0') {
+      if (min == max) {
         printf("ERROR: String length must be exactly %d chars: ", min);
       }
-      else
-      {
+      else {
         printf("ERROR: String length must be no more than %d chars: ", max);
       }
+
       clearStandardInputBuffer();
       flag = 1;
     }

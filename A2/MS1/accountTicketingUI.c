@@ -66,9 +66,11 @@ void displayAccountDetailRecord(const struct Account* account) {
   );
 }
 
-void applicationStartup(struct Account accounts[], int arrSize) {
-  int index;
-
+void applicationStartup(struct AccountTicketingData* data) {
+  int index, arrSize;
+  struct Account* accounts = data->accounts;
+  arrSize = data->ACCOUNT_MAX_SIZE;
+  
   do {
     index = menuLogin(accounts, arrSize);
     
@@ -78,7 +80,7 @@ void applicationStartup(struct Account accounts[], int arrSize) {
         pauseExecution();
 
       } else {
-        menuAgent(accounts, arrSize, &accounts[index]);
+        menuAgent(data, &accounts[index]);
       }
     }
 
@@ -134,8 +136,11 @@ int menuLogin(const struct Account accounts[], int arrSize) {
   return index;
 }
 
-void menuAgent(struct Account accounts[], int arrSize, const struct Account* account) {
-  int index, choose;
+void menuAgent(struct AccountTicketingData* data, const struct Account* account) {
+  int index, choose, arrSize;
+  
+  struct Account* accounts = data->accounts;
+  arrSize = data->ACCOUNT_MAX_SIZE;
 
   do {
     printf("AGENT: %s (%05d)\n", account->login.displayName, account->accountNumber);
@@ -148,19 +153,25 @@ void menuAgent(struct Account accounts[], int arrSize, const struct Account* acc
     printf("4) List accounts: summary view\n");
     printf("5) List accounts: detailed view\n");
     printf("----------------------------------------------\n");
+    printf("6) List new tickets\n");
+    printf("7) List active tickets\n");
+    printf("8) Manage a ticket\n");
+    printf("9) Archive closed tickets\n");
+    printf("----------------------------------------------\n");
     printf("0) Logout\n\n");
     printf("Selection: ");
 
-    choose = getIntFromRange(0, 5);
+    choose = getIntFromRange(0, 9);
     printf("\n");
     
     switch (choose) {
       case 1: {
         index = findAccountIndexByAcctNum(0, accounts, arrSize, 0);
-        
+
         if (index == -1) {
           printf("ERROR: Account listing is FULL, call ITS Support!\n\n");
         } else {
+          accounts[index].accountNumber = autoGenAcctNum(accounts, arrSize);
           getAccount(&accounts[index]);
           getUserLogin(&accounts[index].login);
           getDemographic(&accounts[index].demographic);
@@ -227,6 +238,22 @@ void menuAgent(struct Account accounts[], int arrSize, const struct Account* acc
       case 5: {
         displayAllAccountDetailRecords(accounts, arrSize);
         pauseExecution();
+        break;
+      }
+
+      case 6: {
+        break;
+      }
+
+      case 7: {
+        break;
+      }
+
+      case 8: {
+        break;
+      }
+
+      case 9: {
         break;
       }
 
@@ -342,8 +369,7 @@ void updateUserLogin(struct UserLogin* login) {
       printf("\n");
 
     } else if (choose == 2) {
-      printf("Enter the password (must be 8 chars in length): ");
-      getCString(login->password, 8, 8);
+      getPassword(login->password);
       printf("\n");
     }
 
@@ -375,4 +401,63 @@ void updateDemographic(struct Demographic* demographic) {
     }
 
   } while (choose != 0);
+}
+
+void menuCustomer(const struct Account* account) {
+  int choose;
+  do {
+    printf("==============================================\n");
+    printf("Customer Main Menu\n");
+    printf("==============================================\n");
+    printf("1) View your account detail\n");
+    printf("2) Create a new ticket\n");
+    printf("3) Modify an active ticket\n");
+    printf("4) List my tickets\n");
+    printf("----------------------------------------------\n");
+    printf("0) Logout\n\n");
+    printf("Selection: ");
+
+    choose = getIntFromRange(0, 2);
+    printf("\n");
+
+    switch (choose) {
+      case 1: {
+        displayAccountDetailHeader();
+        displayAccountDetailRecord(account);
+        pauseExecution();
+        break;
+      }
+
+      case 2: 
+      case 3: {
+        printf("Feature #%d currently unavailable!\n\n", choose);
+        pauseExecution();
+        break;
+      }
+
+      case 4: {
+        break;
+      }
+
+      case 0: {
+        printf("### LOGGED OUT ###\n\n");
+        break;
+      }
+
+      default:
+        break;
+    }
+  } while (choose != 0);
+}
+
+int autoGenAcctNum(const struct Account accounts[], int arrSize) {
+  int id, max;
+  max = 1;
+  for (id = 0; id < arrSize; id++) {
+    if (accounts[id].accountNumber > max) {
+      max = accounts[id].accountNumber;
+    }
+  }
+
+  return max + 1;
 }
