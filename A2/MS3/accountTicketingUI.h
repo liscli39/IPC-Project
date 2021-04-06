@@ -123,4 +123,24 @@ void displayAccountTicketList(const struct Account account, const struct Ticket 
 // ---------------------------------------------------------
 void displayTicketList(const struct Ticket tickets[], int arrSize, int new);
 
+// ---------------------------------------------------------
+// Auto generate ticket number
+// ---------------------------------------------------------
+int autoGenTicketNum(const struct Ticket tickets[], int arrSize);
+
+// ---------------------------------------------------------
+// Remove tickets by account number
+// ---------------------------------------------------------
+void removeTicketsByAcctNum(int accountNumber, struct Ticket tickets[], int arrSize);
+
+// ---------------------------------------------------------
+// Ticket Data: update from user input
+// ---------------------------------------------------------
+void updateTicket(struct Ticket* ticket);
+
+// ---------------------------------------------------------
+// Manage a ticket
+// ---------------------------------------------------------
+void manageTicket(struct Ticket* ticket);
+
 #endif
