@@ -121,7 +121,7 @@ void displayAccountTicketList(const struct Account account, const struct Ticket 
 // ---------------------------------------------------------
 // Display list active ticket
 // ---------------------------------------------------------
-void displayTicketList(const struct Ticket tickets[], int arrSize, int new);
+void displayTicketList(const struct Ticket tickets[], int arrSize, int type);
 
 // ---------------------------------------------------------
 // Auto generate ticket number

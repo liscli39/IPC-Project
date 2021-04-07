@@ -14,20 +14,23 @@
 // System Data Array sizes
 // -----------------------------------------------------------------------------------
 #define TICKET_MESSAGE_SIZE 20
+#define DISPLAY_NAME_SIZE 31
+#define MESSAGE_SIZE 151
+#define SUBJECT_SIZE 31
 
 // ----------------------------------------------------------------------------
 // structures
 struct Message {
   char accountType;
-  char displayName[31];
-  char message[151];
+  char displayName[DISPLAY_NAME_SIZE];
+  char message[MESSAGE_SIZE];
 };
 
 struct Ticket {
   int ticketNumber;
   int accountNumber;
   int status;
-  char subject[31];
+  char subject[SUBJECT_SIZE];
   int messageCount;
   struct Message messages[TICKET_MESSAGE_SIZE];
 };

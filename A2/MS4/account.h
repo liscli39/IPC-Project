@@ -10,18 +10,23 @@
 #ifndef ACCOUNT_H_
 #define ACCOUNT_H_
 
+#define COUNTRY_SIZE 31
+#define DISPLAY_NAME_SIZE 31
+#define USERNAME_SIZE 11
+#define PASSWORD_SIZE 9
+
 // ----------------------------------------------------------------------------
 // structures
 struct Demographic {
 	int birthYear;
   double household;
-  char country[31];
+  char country[COUNTRY_SIZE];
 };
 
 struct UserLogin {
-	char displayName[31];
-  char username[11];
-  char password[9];
+	char displayName[DISPLAY_NAME_SIZE];
+  char username[USERNAME_SIZE];
+  char password[PASSWORD_SIZE];
 };
 
 struct Account {

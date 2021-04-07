@@ -58,4 +58,10 @@ char getCharOption(char* string);
 // ---------------------------------------------------------
 void getCString(char* string, int min, int max);
 
+
+// ---------------------------------------------------------
+// Get file input: CS String
+// ---------------------------------------------------------
+void getFileCString(FILE* file, char* string, int max, char endSymbol);
+
 #endif

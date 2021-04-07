@@ -33,7 +33,7 @@ void getUserLogin(struct UserLogin* login) {
   getUsername(login->username);
 
   printf("Enter the display name (30 chars max): ");
-  getCString(login->displayName, 1, 30);
+  getCString(login->displayName, 1, DISPLAY_NAME_SIZE - 1);
 
   getPassword(login->password);
 
@@ -52,7 +52,7 @@ void getDemographic(struct Demographic* demographic) {
   demographic->household = getPositiveDouble();
 
   printf("Enter the country (30 chars max.): ");
-  getCString(demographic->country, 1, 30);
+  getCString(demographic->country, 1, COUNTRY_SIZE - 1);
 
   int id;
   char c;
@@ -70,7 +70,7 @@ void getUsername(char* username) {
   int id, space;
   do {
     printf("Enter user login (10 chars max): ");
-    getCString(username, 1, 10);
+    getCString(username, 1, USERNAME_SIZE - 1);
     space = 0;
 
     for (id = 0; username[id] != '\0'; ++id){
@@ -92,7 +92,7 @@ void getPassword(char *password) {
   
   do {
     printf("Enter the password (must be 8 chars in length): ");
-    getCString(password, 8, 8);
+    getCString(password, PASSWORD_SIZE - 1, PASSWORD_SIZE - 1);
     digit = upper = lower = symbol = flag = 0;
 
     for (id = 0; password[id] != '\0'; ++id){

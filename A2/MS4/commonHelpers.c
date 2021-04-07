@@ -132,8 +132,7 @@ char getCharOption(char* string) {
   return value;
 }
 
-void getCString(char *string, int min, int max)
-{
+void getCString(char *string, int min, int max) {
   int id, flag;
   do {
     char input = '\n';
@@ -173,4 +172,21 @@ void getCString(char *string, int min, int max)
     }
 
   } while (flag);
+}
+
+void getFileCString(FILE* file, char* string, int max, char endSymbol) {
+  int id, flag;
+
+  char input = '\n';
+  flag = 0;
+
+  for (id = 0; id <= max && input != '\0'; id++) {
+    input = fgetc(file);
+
+    if (input == '\n' || input == endSymbol) {
+      input = '\0';
+    }
+
+    string[id] = input;
+  }
 }

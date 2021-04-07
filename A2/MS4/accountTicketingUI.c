@@ -405,7 +405,7 @@ void updateUserLogin(struct UserLogin* login) {
 
     if (choose == 1) {
       printf("Enter the display name (30 chars max): ");
-      getCString(login->displayName, 1, 30);
+      getCString(login->displayName, 1, DISPLAY_NAME_SIZE - 1);
       printf("\n");
 
     } else if (choose == 2) {
@@ -436,7 +436,7 @@ void updateDemographic(struct Demographic* demographic) {
 
     } else if (choose == 2) {
       printf("Enter the country (30 chars max.): ");
-      getCString(demographic->country, 1, 30);
+      getCString(demographic->country, 1, COUNTRY_SIZE - 1);
       printf("\n");
     }
 
@@ -615,7 +615,7 @@ void displayAccountTicketList(const struct Account account, const struct Ticket 
   } while (number != 0);
 }
 
-void displayTicketList(const struct Ticket tickets[], int arrSize, int status) {
+void displayTicketList(const struct Ticket tickets[], int arrSize, int type) {
   int index, id, condition, number;
 
   do {
@@ -626,11 +626,11 @@ void displayTicketList(const struct Ticket tickets[], int arrSize, int status) {
     for (id = 0; id < arrSize; id ++) {
       condition = tickets[id].ticketNumber != 0;
 
-      if (status == TICKET_LIST_CLOSED) {
+      if (type == TICKET_LIST_CLOSED) {
         condition = condition && tickets[id].status == 0;
-      } else if (status == TICKET_LIST_ACTIVE) {
+      } else if (type == TICKET_LIST_ACTIVE) {
         condition = condition && tickets[id].status == 1;
-      } else if (status == TICKET_LIST_CLOSED) {
+      } else if (type == TICKET_LIST_CLOSED) {
         condition = condition && tickets[id].messageCount == 1 && tickets[id].status == 1;
       }
  
@@ -716,7 +716,7 @@ void updateTicket(struct Ticket* ticket) {
 
     if (choose == 1) {
       printf("Enter the revised ticket SUBJECT (30 chars. maximum): ");
-      getCString(ticket->subject, 1, 30);
+      getCString(ticket->subject, 1, SUBJECT_SIZE - 1);
       
     } else if (choose == 2) {
       if (ticket->status == 0) {
@@ -823,20 +823,60 @@ void manageTicket(struct Ticket* ticket) {
 }
 
 int loadAccounts(struct Account accounts[], int arrSize) {
-  int id;
+  int id, count;
   FILE *fp;
-  char buff[255];
 
-  fp = fopen("../accounts.txt", "r");
-  fscanf(fp, "%s", buff);
-  printf("1 : %s\n", buff);
-  // fscanf(fp, "%s", str);
+  fp = fopen("accounts.txt", "r");
+  count = 0;
+  for (id = 0; id < arrSize; id ++) {
+    fscanf(fp, "%d~%c~", 
+      &accounts[id].accountNumber,
+      &accounts[id].accountType
+    );
+    getFileCString(fp, accounts[id].login.displayName, DISPLAY_NAME_SIZE, '~');
+    getFileCString(fp, accounts[id].login.username, USERNAME_SIZE, '~');
+    getFileCString(fp, accounts[id].login.password, PASSWORD_SIZE, '~');
+    fscanf(fp, "%d~",&accounts[id].demographic.birthYear); 
+    fscanf(fp, "%lf~",&accounts[id].demographic.household);
+    getFileCString(fp, accounts[id].demographic.country, COUNTRY_SIZE, '~');
 
-  // for (id = 0; id < arrSize; id ++) {
-  // }
+    if (accounts[id].accountNumber != 0) {
+      count ++;
+    }
+  }
 
+  return count;
 }
 
 int loadTickets(struct Ticket tickets[], int arrSize) {
+  int id, count, messageId, messageCount;
+  char type;
+  FILE *fp;
 
+  fp = fopen("tickets.txt", "r");
+  count = 0;
+  for (id = 0; id < arrSize; id ++) {
+    fscanf(fp, "%d|%d|%d|", 
+      &tickets[id].ticketNumber,
+      &tickets[id].accountNumber,
+      &tickets[id].status
+    );
+    getFileCString(fp, tickets[id].subject, SUBJECT_SIZE, '|');
+    fscanf(fp, "%d|", &messageCount);
+    
+    tickets[id].messageCount = messageCount > TICKET_MESSAGE_SIZE ? TICKET_MESSAGE_SIZE : messageCount;
+
+    for (messageId = 0; messageId < tickets[id].messageCount; messageId ++) {
+      fscanf(fp, "%c|", &tickets[id].messages[messageId].accountType);
+      getFileCString(fp, tickets[id].messages[messageId].displayName, DISPLAY_NAME_SIZE, '|');
+      getFileCString(fp, tickets[id].messages[messageId].message, MESSAGE_SIZE, '|');
+    }
+
+    if (tickets[id].ticketNumber != 0) {
+      count ++;
+    }
+
+  }
+
+  return count;
 }
