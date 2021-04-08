@@ -131,7 +131,7 @@ int autoGenTicketNum(const struct Ticket tickets[], int arrSize);
 // ---------------------------------------------------------
 // Remove tickets by account number
 // ---------------------------------------------------------
-void removeTicketsByAcctNum(int accountNumber, struct Ticket tickets[], int arrSize);
+void removeTicketsByAcctNum(struct Ticket tickets[], int arrSize, int accountNumber, int status);
 
 // ---------------------------------------------------------
 // Ticket Data: update from user input
@@ -152,5 +152,35 @@ int loadAccounts(struct Account accounts[], int arrSize);
 // Load tickets from text
 // ---------------------------------------------------------
 int loadTickets(struct Ticket tickets[], int arrSize);
+
+// ---------------------------------------------------------
+// Storing tickets list to file
+// ---------------------------------------------------------
+int storeTickets(const struct Ticket tickets[], int arrSize);
+
+// ---------------------------------------------------------
+// Storing accounts list to file
+// ---------------------------------------------------------
+int storeAccounts(const struct Account accounts[], int arrSize);
+
+// ---------------------------------------------------------
+// Storing accounts list to file
+// ---------------------------------------------------------
+int storeClosedTickets(const struct Ticket tickets[], int arrSize, int accountNumber);
+
+// ---------------------------------------------------------
+// Storing accounts list to file
+// ---------------------------------------------------------
+void storeRemovedAccounts(const struct Account account);
+
+// ---------------------------------------------------------
+// View archived account statistics
+// ---------------------------------------------------------
+void archivedAccountStatistics();
+
+// ---------------------------------------------------------
+// View archived tickets statistics
+// ---------------------------------------------------------
+void archivedTicketsStatistics();
 
 #endif

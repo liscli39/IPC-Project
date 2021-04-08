@@ -157,7 +157,7 @@ int menuLogin(const struct Account accounts[], int arrSize) {
 
 void menuAgent(struct AccountTicketingData* data, const struct Account* account) {
   int index, choose, arrSize;
-  
+
   struct Account* accounts = data->accounts;
   arrSize = data->ACCOUNT_MAX_SIZE;
 
@@ -178,10 +178,13 @@ void menuAgent(struct AccountTicketingData* data, const struct Account* account)
     printf(" 9) Manage a ticket\n");
     printf("10) Archive closed tickets\n");
     printf("----------------------------------------------\n");
+    printf("11) View archived account statistics\n");
+    printf("12) View archived tickets statistics\n");
+    printf("----------------------------------------------\n");
     printf("0) Logout\n\n");
     printf("Selection: ");
 
-    choose = getIntFromRange(0, 9);
+    choose = getIntFromRange(0, 12);
     printf("\n");
     
     switch (choose) {
@@ -236,9 +239,14 @@ void menuAgent(struct AccountTicketingData* data, const struct Account* account)
             printf("\n");
 
             if (select == 'Y') {
-              removeTicketsByAcctNum(account->accountNumber, data->tickets, data->TICKET_MAX_SIZE);
+              storeClosedTickets(data->tickets, data->TICKET_MAX_SIZE, accounts[index].accountNumber);
+              storeRemovedAccounts(accounts[index]);
+
+              removeTicketsByAcctNum(data->tickets, data->TICKET_MAX_SIZE, accounts[index].accountNumber, 1);
+              removeTicketsByAcctNum(data->tickets, data->TICKET_MAX_SIZE, accounts[index].accountNumber, 0);
               struct Account empty = { 0 }; 
               accounts[index] = empty;
+
               printf("*** Account Removed! ***\n\n");
             } else {
               printf("*** No changes made! ***\n\n");
@@ -293,11 +301,30 @@ void menuAgent(struct AccountTicketingData* data, const struct Account* account)
       }
 
       case 10: {
+        printf("Are you sure? This action cannot be reversed. ([Y]es|[N]o): ");
+        if (getCharOption("YN") == 'Y') {
+          printf("*** %d tickets archived ***\n\n", storeClosedTickets(data->tickets, data->TICKET_MAX_SIZE, 0));
+          removeTicketsByAcctNum(data->tickets, data->TICKET_MAX_SIZE, 0, 0);
+          pauseExecution();
+        }
+
         break;
       }
 
+      case 11: {
+        archivedAccountStatistics();
+        break;
+      }
+
+      case 12: {
+        archivedTicketsStatistics();
+        break;
+      }
 
       case 0: {
+        printf("Saving session modifications...\n");
+        printf("   %d account saved.\n", storeAccounts(data->accounts, data->ACCOUNT_MAX_SIZE));
+        printf("   %d tickets saved.\n", storeTickets(data->tickets, data->TICKET_MAX_SIZE));
         printf("### LOGGED OUT ###\n\n");
       }
 
@@ -515,6 +542,8 @@ void menuCustomer(struct AccountTicketingData* data, const struct Account accoun
       }
 
       case 0: {
+        printf("Saving session modifications...\n");
+        printf("   %d tickets saved.\n", storeTickets(data->tickets, data->TICKET_MAX_SIZE));
         printf("### LOGGED OUT ###\n\n");
         break;
       }
@@ -685,12 +714,18 @@ int autoGenTicketNum(const struct Ticket tickets[], int arrSize) {
   return max + 1;
 }
 
-void removeTicketsByAcctNum(int accountNumber, struct Ticket tickets[], int arrSize) {
-  int id, max;
+void removeTicketsByAcctNum(struct Ticket tickets[], int arrSize, int accountNumber, int status) {
+  int id, condition;
   struct Ticket empty = { 0 }; 
 
   for (id = 0; id < arrSize; id++) {
-    if (tickets[id].accountNumber == accountNumber && tickets[id].status == 1) {
+    condition = tickets[id].ticketNumber != 0 && tickets[id].status == status;
+
+    if (accountNumber != 0) {
+      condition = condition && tickets[id].accountNumber == accountNumber;
+    }
+
+    if (condition) {
       tickets[id] = empty;
     }
   }
@@ -845,6 +880,7 @@ int loadAccounts(struct Account accounts[], int arrSize) {
     }
   }
 
+  fclose (fp);
   return count;
 }
 
@@ -877,6 +913,198 @@ int loadTickets(struct Ticket tickets[], int arrSize) {
     }
 
   }
+  
+  fclose (fp);
+  return count;
+}
+
+int storeTickets(const struct Ticket tickets[], int arrSize) {
+  int id, count, messageId;
+  FILE *fp;
+  fp = fopen("tickets.txt", "w");
+
+  count = 0;
+  for (id = 0; id < arrSize; id ++) {
+    if (tickets[id].ticketNumber != 0) {
+      fprintf(fp, "%d|%d|%d|%s|%d|",
+        tickets[id].ticketNumber,
+        tickets[id].accountNumber,
+        tickets[id].status,
+        tickets[id].subject,
+        tickets[id].messageCount
+      );
+
+      for (messageId = 0; messageId < tickets[id].messageCount; messageId ++) {
+        fprintf(fp, "%c|%s|%s|",
+          tickets[id].messages[messageId].accountType,
+          tickets[id].messages[messageId].displayName,
+          tickets[id].messages[messageId].message
+        );
+      }
+
+      fprintf(fp, "\n");
+      count ++;
+    }
+  }
+
+  fclose(fp);
 
   return count;
+}
+
+int storeAccounts(const struct Account accounts[], int arrSize) {
+  int id, count;
+  FILE *fp;
+  fp = fopen("accounts.txt", "w");
+
+  count = 0;
+  for (id = 0; id < arrSize; id ++) {
+    if (accounts[id].accountNumber != 0) {
+      fprintf(fp, "%d~%c~%s~%s~%s~%d~%.2lf~%s",
+        accounts[id].accountNumber,
+        accounts[id].accountType,
+        accounts[id].login.displayName,
+        accounts[id].login.username,
+        accounts[id].login.password,
+        accounts[id].demographic.birthYear,
+        accounts[id].demographic.household,
+        accounts[id].demographic.country
+      );
+
+      fprintf(fp, "\n");
+      count ++;
+    }
+  }
+
+  fclose(fp);
+
+  return count;
+}
+
+int storeClosedTickets(const struct Ticket tickets[], int arrSize, int accountNumber) {
+  int id, count, messageId, condition;
+  FILE *fp;
+  fp = fopen("tickets_arc.txt", "a");
+
+  count = 0;
+  for (id = 0; id < arrSize; id ++) {
+    condition = tickets[id].ticketNumber != 0 && tickets[id].status == 0;
+
+    if (accountNumber != 0) {
+      condition = condition && tickets[id].accountNumber == accountNumber;
+    }
+
+    if (condition) {
+      fprintf(fp, "%d|%d|%d|%s|%d|",
+        tickets[id].ticketNumber,
+        tickets[id].accountNumber,
+        tickets[id].status,
+        tickets[id].subject,
+        tickets[id].messageCount
+      );
+
+      for (messageId = 0; messageId < tickets[id].messageCount; messageId ++) {
+        fprintf(fp, "%c|%s|%s|",
+          tickets[id].messages[messageId].accountType,
+          tickets[id].messages[messageId].displayName,
+          tickets[id].messages[messageId].message
+        );
+      }
+
+      fprintf(fp, "\n");
+      count ++;
+    }
+  }
+
+  fclose(fp);
+  
+  return count;
+}
+
+void storeRemovedAccounts(const struct Account account) {
+  FILE *fp;
+  fp = fopen("accounts_arc.txt", "a");
+
+  fprintf(fp, "%d~%c~%s~%s~%s~%d~%.2lf~%s",
+    account.accountNumber,
+    account.accountType,
+    account.login.displayName,
+    account.login.username,
+    account.login.password,
+    account.demographic.birthYear,
+    account.demographic.household,
+    account.demographic.country
+  );
+
+  fprintf(fp, "\n");
+
+  fclose(fp);
+}
+
+void archivedAccountStatistics() {
+  int count;
+  struct Account account;
+  FILE *fp;
+
+  fp = fopen("accounts_arc.txt", "a+");
+  count = 0;
+  do {
+    account.accountNumber = 0;
+
+    fscanf(fp, "%d~%c~", 
+      &account.accountNumber,
+      &account.accountType
+    );
+    getFileCString(fp, account.login.displayName, DISPLAY_NAME_SIZE, '~');
+    getFileCString(fp, account.login.username, USERNAME_SIZE, '~');
+    getFileCString(fp, account.login.password, PASSWORD_SIZE, '~');
+    fscanf(fp, "%d~",&account.demographic.birthYear); 
+    fscanf(fp, "%lf~",&account.demographic.household);
+    getFileCString(fp, account.demographic.country, COUNTRY_SIZE, '~');
+
+    if (account.accountNumber != 0) {
+      count ++;
+    }
+  } while (account.accountNumber != 0);
+
+  fclose (fp);
+
+  printf("There are %d account(s) currently archived.\n\n", count);
+}
+
+void archivedTicketsStatistics() {
+  int count, messageId, messageCount;
+  char type;
+  struct Ticket ticket;
+  FILE *fp;
+
+  fp = fopen("tickets_arc.txt", "a+");
+  count = 0;
+  messageCount = 0;
+  do {
+    ticket.ticketNumber = 0;
+
+    fscanf(fp, "%d|%d|%d|", 
+      &ticket.ticketNumber,
+      &ticket.accountNumber,
+      &ticket.status
+    );
+    getFileCString(fp, ticket.subject, SUBJECT_SIZE, '|');
+    fscanf(fp, "%d|", &ticket.messageCount);
+    
+    for (messageId = 0; messageId < ticket.messageCount; messageId ++) {
+      fscanf(fp, "%c|", &ticket.messages[messageId].accountType);
+      getFileCString(fp, ticket.messages[messageId].displayName, DISPLAY_NAME_SIZE, '|');
+      getFileCString(fp, ticket.messages[messageId].message, MESSAGE_SIZE, '|');
+    }
+
+    if (ticket.ticketNumber != 0) {
+      count ++;
+      messageCount += ticket.messageCount;
+    }
+  } while (ticket.ticketNumber != 0);
+
+  fclose (fp);
+
+  printf("There are %d ticket(s) and a total of %d message(s) archived.\n\n", count, messageCount);
 }
