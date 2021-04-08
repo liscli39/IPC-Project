@@ -28,4 +28,5 @@ void getTicket(struct Ticket* ticket) {
 void getTicketMessage(char * message) {
   printf("Enter the ticket message details (150 chars. maximum). Press the ENTER key to submit: ");
   getCString(message, 1, 150);
+  printf("\n");
 }

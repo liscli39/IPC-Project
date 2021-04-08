@@ -136,12 +136,12 @@ void removeTicketsByAcctNum(struct Ticket tickets[], int arrSize, int accountNum
 // ---------------------------------------------------------
 // Ticket Data: update from user input
 // ---------------------------------------------------------
-void updateTicket(struct Ticket* ticket);
+void updateTicket(struct Ticket* ticket, const struct Account account);
 
 // ---------------------------------------------------------
 // Manage a ticket
 // ---------------------------------------------------------
-void manageTicket(struct Ticket* ticket);
+void manageTicket(struct Ticket* ticket, const struct Account account);
 
 // ---------------------------------------------------------
 // Load accounts from text
@@ -182,5 +182,10 @@ void archivedAccountStatistics();
 // View archived tickets statistics
 // ---------------------------------------------------------
 void archivedTicketsStatistics();
+
+// ---------------------------------------------------------
+// Closed ticket
+// ---------------------------------------------------------
+int closedTicket(struct Ticket* ticket, const struct Account account);
 
 #endif

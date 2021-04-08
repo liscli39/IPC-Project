@@ -21,6 +21,7 @@ void getTicket(struct Ticket* ticket) {
   printf("----------------------------------------\n");
   printf("Enter the ticket SUBJECT (30 chars. maximum): ");
   getCString(ticket->subject, 1, 30);
+  printf("\n");
   getTicketMessage(ticket->messages[0].message);
   printf("\n");
 }

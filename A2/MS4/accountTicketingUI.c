@@ -294,7 +294,7 @@ void menuAgent(struct AccountTicketingData* data, const struct Account* account)
           printf("ERROR: Ticket is not exist!\n\n");
           pauseExecution();
         } else {
-          manageTicket(&data->tickets[index]);
+          manageTicket(&data->tickets[index], *account);
         }
         
         break;
@@ -313,11 +313,13 @@ void menuAgent(struct AccountTicketingData* data, const struct Account* account)
 
       case 11: {
         archivedAccountStatistics();
+        pauseExecution();
         break;
       }
 
       case 12: {
         archivedTicketsStatistics();
+        pauseExecution();
         break;
       }
 
@@ -405,7 +407,6 @@ void updateAccount(struct Account* account) {
     if (choose == 1) {
       printf("Enter the account type (A=Agent | C=Customer): ");
       account->accountType = getCharOption("AC");
-      printf("\n");
       
     } else if (choose == 2) {
       updateUserLogin(&account->login);
@@ -525,14 +526,14 @@ void menuCustomer(struct AccountTicketingData* data, const struct Account accoun
 
         if (index == -1) {
           printf("ERROR: Ticket is not exist!\n\n");
-          pauseExecution();
         } else if (data->tickets[index].accountNumber != account.accountNumber) {
           printf("ERROR: Invalid ticket number - you may only modify your own ticket.\n\n");
-          pauseExecution();
+        } else if (data->tickets[index].status == 0) {
+          printf("ERROR: Ticket is closed - changes are not permitted.\n\n");
         } else {
-          updateTicket(&data->tickets[index]);
+          updateTicket(&data->tickets[index], account);
         }
-
+        pauseExecution();
         break;
       }
 
@@ -590,7 +591,7 @@ void displayTicketDetail(const struct Ticket ticket) {
     printf("%s (%s):\n", ticket.messages[id].accountType == 'A' ? "AGENT" : "CUSTOMER", ticket.messages[id].displayName);
     printf("   %s\n\n", ticket.messages[id].message);
 
-    if (--count == 0) {
+    if (--count == 0 && id < ticket.messageCount - 1) {
       pauseExecution();
       count = 5;
     }
@@ -609,7 +610,7 @@ void displayAccountTicketList(const struct Account account, const struct Ticket 
     for (id = 0; id < arrSize; id ++) {
       if (tickets[id].ticketNumber != 0 && tickets[id].accountNumber == account.accountNumber) {
         printf(
-          "%06d %-6s %-30s     %d\n", 
+          "%06d %-6s %-30s    %2d\n", 
           tickets[id].ticketNumber, 
           tickets[id].status ? "ACTIVE" : "CLOSED",
           tickets[id].subject,
@@ -635,6 +636,8 @@ void displayAccountTicketList(const struct Account account, const struct Ticket 
 
       if (index == -1) {
         printf("ERROR: Invalid ticket number.\n\n");
+      } else if (tickets[index].accountNumber != account.accountNumber) {
+        printf("ERROR: Invalid ticket number - you may only access your own tickets.\n\n");
       } else {
         displayTicketDetail(tickets[index]);
       }
@@ -659,13 +662,13 @@ void displayTicketList(const struct Ticket tickets[], int arrSize, int type) {
         condition = condition && tickets[id].status == 0;
       } else if (type == TICKET_LIST_ACTIVE) {
         condition = condition && tickets[id].status == 1;
-      } else if (type == TICKET_LIST_CLOSED) {
+      } else if (type == TICKET_LIST_NEW) {
         condition = condition && tickets[id].messageCount == 1 && tickets[id].status == 1;
       }
  
       if (condition) {
         printf( 
-          "%06d %05d %-15s %-6s %-30s     %d\n", 
+          "%06d %05d %-15s %-6s %-30s    %2d\n", 
           tickets[id].ticketNumber, 
           tickets[id].accountNumber,
           tickets[id].messages[0].displayName,
@@ -731,7 +734,7 @@ void removeTicketsByAcctNum(struct Ticket tickets[], int arrSize, int accountNum
   }
 }
 
-void updateTicket(struct Ticket* ticket) {
+void updateTicket(struct Ticket* ticket, const struct Account account) {
   int choose;
   do {
     printf("----------------------------------------\n");
@@ -752,6 +755,7 @@ void updateTicket(struct Ticket* ticket) {
     if (choose == 1) {
       printf("Enter the revised ticket SUBJECT (30 chars. maximum): ");
       getCString(ticket->subject, 1, SUBJECT_SIZE - 1);
+      printf("\n");
       
     } else if (choose == 2) {
       if (ticket->status == 0) {
@@ -759,37 +763,25 @@ void updateTicket(struct Ticket* ticket) {
       } else if (ticket->messageCount == TICKET_MESSAGE_SIZE) {
         printf("ERROR: Message limit has been reached, call ITS Support!\n");
       } else {
+        strcpy(ticket->messages[ticket->messageCount].displayName, account.login.displayName);
         getTicketMessage(ticket->messages[ticket->messageCount].message);
         ticket->messageCount ++;
       }
+
+      printf("\n");
+    
     } else if (choose == 3) {
       if (ticket->status == 0) {
         printf("ERROR: Ticket is already closed!\n\n");
       } else {
-        printf("Are you sure you CLOSE this ticket? ([Y]es|[N]o): ");
-
-        char select = getCharOption("YN");
-        printf("\n");
-        if (select == 'Y') {
-          ticket->status = 0;
-
-          printf("Do you want to leave a closing message? ([Y]es|[N]o): ");
-          select = getCharOption("YN");
-
-          if (select == 'Y') {
-            getTicketMessage(ticket->messages[ticket->messageCount].message);
-            ticket->messageCount ++;
-            choose = 0;
-          }
-        }
+        choose = closedTicket(ticket, account) ? 0 : 1;
+        printf("*** Ticket closed! ***\n\n");
       }
     }
-
-    printf("\n");
   } while (choose != 0);
 }
 
-void manageTicket(struct Ticket* ticket) {
+void manageTicket(struct Ticket* ticket, const struct Account account) {
   int choose;
   do {
     printf("----------------------------------------\n");
@@ -817,27 +809,14 @@ void manageTicket(struct Ticket* ticket) {
       } else {
         getTicketMessage(ticket->messages[ticket->messageCount].message);
         ticket->messageCount ++;
+        printf("\n");
       }
     } else if (choose == 2) {
       if (ticket->status == 0) {
         printf("ERROR: Ticket is already closed!\n\n");
       } else {
-        printf("Are you sure you CLOSE this ticket? ([Y]es|[N]o): ");
-
-        char select = getCharOption("YN");
-        printf("\n");
-        if (select == 'Y') {
-          ticket->status = 0;
-
-          printf("Do you want to leave a closing message? ([Y]es|[N]o): ");
-          select = getCharOption("YN");
-
-          if (select == 'Y') {
-            getTicketMessage(ticket->messages[ticket->messageCount].message);
-            ticket->messageCount ++;
-            choose = 0;
-          }
-        }
+        closedTicket(ticket, account);
+        printf("*** Ticket closed! ***\n\n");
       }
     } else if (choose == 3) {
       if (ticket->status == 1) {
@@ -1107,4 +1086,33 @@ void archivedTicketsStatistics() {
   fclose (fp);
 
   printf("There are %d ticket(s) and a total of %d message(s) archived.\n\n", count, messageCount);
+}
+
+int closedTicket(struct Ticket* ticket, const struct Account account) {
+  int isClose = 0;
+
+  printf("Are you sure you CLOSE this ticket? ([Y]es|[N]o): ");
+
+  char select = getCharOption("YN");
+  printf("\n");
+  if (select == 'Y') {
+    ticket->status = 0;
+
+    if (ticket->messageCount < TICKET_MESSAGE_SIZE) {
+      printf("Do you want to leave a closing message? ([Y]es|[N]o): ");
+      select = getCharOption("YN");
+      printf("\n");
+
+      if (select == 'Y') {
+        strcpy(ticket->messages[ticket->messageCount].displayName, account.login.displayName);
+        getTicketMessage(ticket->messages[ticket->messageCount].message);
+        ticket->messageCount ++;
+        printf("\n");
+      }
+    }
+
+    isClose = 1;
+  }
+
+  return isClose;
 }

@@ -27,6 +27,7 @@ cust2
 
 
 
+
 0
 2
 Funny Noises are coming from the unit!
@@ -36,6 +37,9 @@ When it turns on it screams at me and it's quite offending.
 4
 0
 2
+
+3
+80004
 
 3
 80020
@@ -61,6 +65,7 @@ Never mind, I oiled it and all is fine now.
 
 4
 80600
+
 0
 3
 30530
@@ -91,7 +96,7 @@ TT*&21tt
 3
 34063
 y
-y
+Y
 
 1
 C
@@ -199,6 +204,7 @@ Ticket is now closed.
 0
 8
 80600
+
 0
 9
 70533
