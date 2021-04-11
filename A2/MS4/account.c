@@ -81,7 +81,7 @@ void getUsername(char* username) {
     }
     
     if (space != 0) {
-      printf("ERROR: The user login must NOT contain whitespace characters.\n");
+      printf("ERROR:  The user login must NOT contain whitespace characters.\n");
     }
   } while (space != 0);
 }

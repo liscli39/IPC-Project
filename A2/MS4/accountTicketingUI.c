@@ -14,6 +14,7 @@
 #define TICKET_LIST_CLOSED 0
 
 // System Libraries
+#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -112,7 +113,7 @@ int menuLogin(const struct Account accounts[], int arrSize) {
       flag = 0;
 
       do {
-        printf("Enter your account#: ");
+        printf("Enter the account#: ");
         index = findAccountIndexByAcctNum(getInteger(), accounts, arrSize, 0);
         printf("User Login    : ");
         getCString(username, 1, 30);
@@ -131,7 +132,7 @@ int menuLogin(const struct Account accounts[], int arrSize) {
       } while (remaining != 0 && flag == 0);
 
       if (flag == 0) {
-        printf("ERROR:  Login failed!.\n\n");
+        printf("ERROR:  Login failed!\n\n");
         pauseExecution();
       } else {
         choose = 0;
@@ -303,6 +304,7 @@ void menuAgent(struct AccountTicketingData* data, const struct Account* account)
       case 10: {
         printf("Are you sure? This action cannot be reversed. ([Y]es|[N]o): ");
         if (getCharOption("YN") == 'Y') {
+          printf("\n");
           printf("*** %d tickets archived ***\n\n", storeClosedTickets(data->tickets, data->TICKET_MAX_SIZE, 0));
           removeTicketsByAcctNum(data->tickets, data->TICKET_MAX_SIZE, 0, 0);
           pauseExecution();
@@ -465,6 +467,16 @@ void updateDemographic(struct Demographic* demographic) {
     } else if (choose == 2) {
       printf("Enter the country (30 chars max.): ");
       getCString(demographic->country, 1, COUNTRY_SIZE - 1);
+
+      int id;
+      char c;
+      for (id = 0; demographic->country[id] != '\0'; ++id){
+        c = demographic->country[id];
+        if (c >= 'a' && c <= 'z') {
+          demographic->country[id] = toupper(c);
+        }
+      }
+
       printf("\n");
     }
 
@@ -738,10 +750,10 @@ void updateTicket(struct Ticket* ticket, const struct Account account) {
   int choose;
   do {
     printf("----------------------------------------\n");
-    printf("Ticket: %06d - Update Options\n", ticket->ticketNumber);
+    printf("Ticket %06d - Update Options\n", ticket->ticketNumber);
     printf("----------------------------------------\n");
-    printf("Status  : %-6s\n", ticket->status ? "ACTIVE" : "CLOSED");
-    printf("Subject : %-30s\n", ticket->subject);
+    printf("Status  : %s\n", ticket->status ? "ACTIVE" : "CLOSED");
+    printf("Subject : %s\n", ticket->subject);
     printf("----------------------------------------\n");
     printf("1) Modify the subject\n");
     printf("2) Add a message\n");
@@ -763,6 +775,7 @@ void updateTicket(struct Ticket* ticket, const struct Account account) {
       } else if (ticket->messageCount == TICKET_MESSAGE_SIZE) {
         printf("ERROR: Message limit has been reached, call ITS Support!\n");
       } else {
+        ticket->messages[ticket->messageCount].accountType = account.accountType;
         strcpy(ticket->messages[ticket->messageCount].displayName, account.login.displayName);
         getTicketMessage(ticket->messages[ticket->messageCount].message);
         ticket->messageCount ++;
@@ -785,12 +798,12 @@ void manageTicket(struct Ticket* ticket, const struct Account account) {
   int choose;
   do {
     printf("----------------------------------------\n");
-    printf("Ticket: %06d - Update Options\n", ticket->ticketNumber);
+    printf("Ticket %06d - Update Options\n", ticket->ticketNumber);
     printf("----------------------------------------\n");
-    printf("Status  : %-6s\n", ticket->status ? "ACTIVE" : "CLOSED");
-    printf("Subject : %-30s\n", ticket->subject);
+    printf("Status  : %s\n", ticket->status ? "ACTIVE" : "CLOSED");
+    printf("Subject : %s\n", ticket->subject);
     printf("Acct#   : %05d\n", ticket->accountNumber);
-    printf("Customer: %-30s\n", ticket->messages[0].displayName);
+    printf("Customer: %s\n", ticket->messages[0].displayName);
     printf("----------------------------------------\n");
     printf("1) Add a message\n");
     printf("2) Close ticket\n");
@@ -807,6 +820,8 @@ void manageTicket(struct Ticket* ticket, const struct Account account) {
       } else if (ticket->messageCount == TICKET_MESSAGE_SIZE) {
         printf("ERROR: Message limit has been reached, call ITS Support!\n\n");
       } else {
+        ticket->messages[ticket->messageCount].accountType = account.accountType;
+        strcpy(ticket->messages[ticket->messageCount].displayName, account.login.displayName);
         getTicketMessage(ticket->messages[ticket->messageCount].message);
         ticket->messageCount ++;
         printf("\n");
@@ -865,7 +880,6 @@ int loadAccounts(struct Account accounts[], int arrSize) {
 
 int loadTickets(struct Ticket tickets[], int arrSize) {
   int id, count, messageId, messageCount;
-  char type;
   FILE *fp;
 
   fp = fopen("tickets.txt", "r");
@@ -1053,7 +1067,6 @@ void archivedAccountStatistics() {
 
 void archivedTicketsStatistics() {
   int count, messageId, messageCount;
-  char type;
   struct Ticket ticket;
   FILE *fp;
 
@@ -1104,6 +1117,7 @@ int closedTicket(struct Ticket* ticket, const struct Account account) {
       printf("\n");
 
       if (select == 'Y') {
+        ticket->messages[ticket->messageCount].accountType = account.accountType;
         strcpy(ticket->messages[ticket->messageCount].displayName, account.login.displayName);
         getTicketMessage(ticket->messages[ticket->messageCount].message);
         ticket->messageCount ++;

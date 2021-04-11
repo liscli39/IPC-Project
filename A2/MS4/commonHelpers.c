@@ -175,10 +175,8 @@ void getCString(char *string, int min, int max) {
 }
 
 void getFileCString(FILE* file, char* string, int max, char endSymbol) {
-  int id, flag;
-
+  int id;
   char input = '\n';
-  flag = 0;
 
   for (id = 0; id <= max && input != '\0'; id++) {
     input = fgetc(file);
